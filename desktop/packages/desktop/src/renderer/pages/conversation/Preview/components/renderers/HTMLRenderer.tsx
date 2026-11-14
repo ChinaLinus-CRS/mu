@@ -9,7 +9,6 @@ import { useTypingAnimation } from '@/renderer/hooks/chat/useTypingAnimation';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useScrollSyncTarget } from '../../hooks/useScrollSyncHelpers';
 import { generateInspectScript } from './htmlInspectScript';
-import { generateMarkScript, type MarkedElement } from './htmlMarkScript';
 
 /** 选中元素的数据结构 / Selected element data structure */
 export interface InspectedElement {
@@ -30,10 +29,6 @@ interface HTMLRendererProps {
   copySuccessMessage?: string;
   /** 元素选中回调 / Element selected callback */
   onElementSelected?: (element: InspectedElement) => void;
-  /** 是否开启标记模式 / Whether mark mode is enabled */
-  markMode?: boolean;
-  /** 元素标记回调 / Element marked callback */
-  onElementMarked?: (mark: MarkedElement) => void;
 }
 
 // Electron webview 元素的类型定义 / Type definition for Electron webview element
@@ -276,9 +271,6 @@ const HTMLRenderer: React.FC<HTMLRendererProps> = ({
   containerRef,
   onScroll,
   inspectMode = false,
-
-  markMode = false,
-  onElementMarked,
   copySuccessMessage,
   onElementSelected,
 }) => {
@@ -538,22 +530,6 @@ const HTMLRenderer: React.FC<HTMLRendererProps> = ({
     };
   }, [executeScript]);
 
-  // 标记模式：与审核模式同构，独立注入 / Mark mode: same shape as inspect, injected separately
-  const markScript = useMemo(() => generateMarkScript(markMode), [markMode]);
-  const executeMarkScript = useCallback(() => {
-    const webview = webviewRef.current;
-    if (!webview) return;
-    void webview.executeJavaScript(markScript).catch(() => {});
-  }, [markScript]);
-  useEffect(() => {
-    const webview = webviewRef.current;
-    if (!webview) return;
-    if (webviewLoadedRef.current) executeMarkScript();
-    const handleLoad = () => executeMarkScript();
-    webview.addEventListener('did-finish-load', handleLoad);
-    return () => webview.removeEventListener('did-finish-load', handleLoad);
-  }, [executeMarkScript]);
-
   // 监听 webview 控制台消息，捕获检查元素事件和滚动事件
   // Listen for webview console messages to capture inspect element events and scroll events
   useEffect(() => {
@@ -571,16 +547,7 @@ const HTMLRenderer: React.FC<HTMLRendererProps> = ({
 
       if (typeof message === 'string') {
         // 处理检查元素消息 / Handle inspect element message
-        // 处理元素标记消息 / Handle element mark message
-        if (message.startsWith('__MARK_ELEMENT__') && onElementMarked) {
-          try {
-            const jsonStr = message.slice('__MARK_ELEMENT__'.length);
-            const data = JSON.parse(jsonStr) as MarkedElement;
-            onElementMarked(data);
-          } catch (e) {
-            console.warn('[HTMLRenderer] Failed to parse mark element message:', e);
-          }
-        } else if (message.startsWith('__INSPECT_ELEMENT__') && onElementSelected) {
+        if (message.startsWith('__INSPECT_ELEMENT__') && onElementSelected) {
           try {
             const jsonStr = message.slice('__INSPECT_ELEMENT__'.length);
             const data = JSON.parse(jsonStr) as InspectedElement;

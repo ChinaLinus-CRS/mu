@@ -88,7 +88,6 @@ describe('PreviewToolbar save button', () => {
         showOpenInSystemButton
         onOpenInSystem={vi.fn()}
         onInspectModeToggle={vi.fn()}
-        onMarkModeToggle={vi.fn()}
         refreshState='idle'
         refreshActionable
         showSave
@@ -105,29 +104,6 @@ describe('PreviewToolbar save button', () => {
     expect(openInSystem.parentElement?.firstElementChild).toBe(openInSystem);
     expect(openInSystem.compareDocumentPosition(inspectBtn) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(inspectBtn.compareDocumentPosition(save) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  });
-
-  it('puts the mark-elements button right before inspect, and toggles with its own handler', () => {
-    const onMarkModeToggle = vi.fn();
-    render(
-      <PreviewToolbar
-        {...baseProps}
-        content_type='html'
-        isHTML
-        showOpenInSystemButton
-        onOpenInSystem={vi.fn()}
-        onInspectModeToggle={vi.fn()}
-        onMarkModeToggle={onMarkModeToggle}
-      />
-    );
-
-    const mark = screen.getByTestId('preview-mark');
-    const inspectBtn = screen.getByText('preview.html.inspectElement');
-    expect(mark.textContent).toContain('preview.html.markElement');
-    // The mark button leads inspect: marking is the gentler sibling of inspecting.
-    expect(mark.compareDocumentPosition(inspectBtn) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    fireEvent.click(mark);
-    expect(onMarkModeToggle).toHaveBeenCalledTimes(1);
   });
 });
 
