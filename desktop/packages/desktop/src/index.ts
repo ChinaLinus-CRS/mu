@@ -236,6 +236,12 @@ ipcMain.handle('clipboard:write-files', async (_event, rawPaths: unknown): Promi
   if (existing.length === 0) return false;
   try {
     if (process.platform === 'win32') {
+      // 单文件：FileNameW 是 Electron 能按名字写的原生格式，资源管理器可识别，
+      // 零子进程瞬时完成。多文件：CF_HDROP 无法按名字注册，只能借 PowerShell。
+      if (existing.length === 1) {
+        clipboard.writeBuffer('FileNameW', Buffer.concat([Buffer.from(existing[0], 'utf16le'), Buffer.from([0, 0])]));
+        return true;
+      }
       const list = existing.map((p) => `'${p.replace(/'/g, "''")}'`).join(', ');
       await new Promise<void>((resolve, reject) => {
         execFile(
