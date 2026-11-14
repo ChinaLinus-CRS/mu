@@ -34,6 +34,7 @@ import DiffPreview from '../viewers/diff/DiffViewer';
 import ExcelPreview from '../viewers/ExcelViewer';
 import HTMLEditor from '../editors/HTMLEditor';
 import HTMLRenderer from '../renderers/HTMLRenderer';
+import type { MarkedElement } from '../renderers/htmlMarkScript';
 import ImagePreview from '../viewers/ImageViewer';
 import ImageGallery from '../ImageGallery/ImageGallery';
 import { galleryOf } from '../ImageGallery/galleryTab';
@@ -111,6 +112,10 @@ const PreviewPanel: React.FC = () => {
   const [viewMode, setViewMode] = useState<'source' | 'preview'>('preview');
   const [isSplitScreenEnabled, setIsSplitScreenEnabled] = useState(false);
   const [inspectMode, setInspectMode] = useState(false);
+  // 标记元素模式：与审核模式互不干扰 / Element-marking mode: independent of inspect mode
+  const [markMode, setMarkMode] = useState(false);
+  // 已标记元素的清单 / The marked elements so far
+  const [marks, setMarks] = useState<MarkedElement[]>([]);
   const [toolbarExtras, setToolbarExtras] = useState<PreviewToolbarExtras | null>(null);
 
   // 切换文件时把视图模式复位为预览，避免上一个文件的 source 模式串到下一个文件（如代码文件丢失语法高亮）。
@@ -279,6 +284,34 @@ const PreviewPanel: React.FC = () => {
       addDomSnippet(element.tag, element.html);
     },
     [addDomSnippet]
+  );
+
+  // 标记/取消标记元素：维护清单并写入同目录 .marks.json，对话里的 agent 可直接读它定位元素
+  // Mark/unmark an element: keep the list and persist a .marks.json sidecar next
+  // to the file so the agent in the conversation can resolve "标记的 2 号" to an element.
+  const handleElementMarked = useCallback(
+    (mark: MarkedElement) => {
+      setMarks((previous) => {
+        const next =
+          mark.action === 'remove'
+            ? previous.filter((item) => item.index !== mark.index)
+            : [...previous.filter((item) => item.index !== mark.index), mark];
+        const file = activeTab?.metadata?.file_path;
+        if (file) {
+          void ipcBridge.fs.writeFile
+            .invoke({
+              path: `${file}.marks.json`,
+              data: JSON.stringify({ file, updatedAt: new Date().toISOString(), marks: next }, null, 2),
+            })
+            .catch(() => {
+              // 标记仍显示在预览里，只是 agent 读不到 sidecar / The badges stay on;
+              // only the agent-readable sidecar is missing.
+            });
+        }
+        return next;
+      });
+    },
+    [activeTab?.metadata?.file_path]
   );
 
   const toolbarExtrasContextValue = useMemo(
@@ -976,6 +1009,8 @@ const PreviewPanel: React.FC = () => {
                 isDirty={activeTab?.isDirty}
                 copySuccessMessage={t('preview.html.copySuccess')}
                 inspectMode={inspectMode}
+                markMode={markMode}
+                onElementMarked={handleElementMarked}
                 onElementSelected={handleElementSelected}
               />
             </div>
@@ -1020,6 +1055,8 @@ const PreviewPanel: React.FC = () => {
                   containerRef={previewContainerRef}
                   onScroll={handlePreviewScroll}
                   inspectMode={inspectMode}
+                markMode={markMode}
+                onElementMarked={handleElementMarked}
                   copySuccessMessage={t('preview.html.copySuccess')}
                   onElementSelected={handleElementSelected}
                 />
@@ -1051,6 +1088,8 @@ const PreviewPanel: React.FC = () => {
               workspace={metadata?.workspace}
               isDirty={activeTab?.isDirty}
               inspectMode={inspectMode}
+                markMode={markMode}
+                onElementMarked={handleElementMarked}
               copySuccessMessage={t('preview.html.copySuccess')}
               onElementSelected={handleElementSelected}
             />
@@ -1230,6 +1269,8 @@ const PreviewPanel: React.FC = () => {
             onClose={handleClosePanel}
             inspectMode={inspectMode}
             onInspectModeToggle={() => setInspectMode(!inspectMode)}
+            markMode={markMode}
+            onMarkModeToggle={() => setMarkMode(!markMode)}
             leftExtra={toolbarExtras?.left}
             rightExtra={toolbarExtras?.right}
           />

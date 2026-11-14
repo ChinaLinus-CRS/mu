@@ -149,6 +149,15 @@ interface PreviewToolbarProps {
   onInspectModeToggle?: () => void;
 
   /**
+   * 是否处于标记元素模式（仅HTML类型）/ Whether element-marking mode is on (HTML only)
+   */
+  markMode?: boolean;
+  /**
+   * 切换标记元素模式 / Toggle element-marking mode
+   */
+  onMarkModeToggle?: () => void;
+
+  /**
    * 左侧额外渲染内容
    * Extra content rendered on the left section
    */
@@ -192,6 +201,9 @@ const PreviewToolbar: React.FC<PreviewToolbarProps> = ({
   onClose,
   inspectMode,
   onInspectModeToggle,
+
+  markMode,
+  onMarkModeToggle,
   leftExtra,
   rightExtra,
 }) => {
@@ -234,6 +246,31 @@ const PreviewToolbar: React.FC<PreviewToolbarProps> = ({
                 <line x1='10' y1='14' x2='21' y2='3' />
               </svg>
               <span>{t('preview.openInSystemApp')}</span>
+            </div>
+          )}
+
+          {isHTML && !hasNoRenderableContent && onMarkModeToggle && (
+            <div
+              data-testid='preview-mark'
+              className={`${toolbarBtn} ${markMode ? toolbarBtnActive : ''}`}
+              onClick={onMarkModeToggle}
+              title={markMode ? t('preview.html.markElementDisable') : t('preview.html.markElementEnable')}
+            >
+              <svg
+                width={toolbarIconSize}
+                height={toolbarIconSize}
+                viewBox='0 0 24 24'
+                fill='none'
+                stroke='currentColor'
+                strokeWidth='2'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                className={markMode ? 'text-white' : 'text-t-secondary'}
+              >
+                <path d='M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z' />
+                <line x1='7' y1='7' x2='7.01' y2='7' />
+              </svg>
+              <span>{markMode ? t('preview.html.marking') : t('preview.html.markElement')}</span>
             </div>
           )}
 
