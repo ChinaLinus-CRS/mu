@@ -20,5 +20,5 @@ export type VoiceInputKeyId = keyof typeof VOICE_INPUT_KEYS;
 export const DEFAULT_VOICE_INPUT_KEY: VoiceInputKeyId = 'rightCtrl';
 
 export function resolveVoiceInputKey(id: string | undefined): { vk: number; extended: boolean } {
-  return VOICE_INPUT_KEYS[(id as VoiceInputKeyId) ?? ''] ?? VOICE_INPUT_KEYS[DEFAULT_VOICE_INPUT_KEY];
+  return (id !== undefined && id in VOICE_INPUT_KEYS ? VOICE_INPUT_KEYS[id as VoiceInputKeyId] : undefined) ?? VOICE_INPUT_KEYS[DEFAULT_VOICE_INPUT_KEY];
 }
