@@ -15,7 +15,7 @@ import { copyText } from '@/renderer/utils/ui/clipboard';
 import { codeLanguage } from './codeLanguage';
 import MermaidBlock from './MermaidBlock';
 import WavedromBlock from './WavedromBlock';
-import MuUiBlock, { parseMuUiSpec } from './MuUiBlock';
+import MuUiBlock, { parseMuUiSpec } from './MuUi/MuUiBlock';
 import { formatCode, getDiffLineStyle } from './markdownUtils';
 import { MarkdownFileSlotsContext } from './markdownComponents';
 
