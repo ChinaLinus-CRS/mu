@@ -139,5 +139,18 @@
   },
   "muUiTruncated": "Shown in part — this UI block is over the size limit",
   "muUiImageLoadFailed": "This image could not be loaded",
-  "muUiEChartLoading": "Loading chart…"
+  "muUiEChartLoading": "Loading chart…",
+  "muUiNotify_triggered": "Triggered",
+  "muUiNotify_waiting": "Triggered — will send when the conversation is idle",
+  "muUiNotify_sent": "Sent to the conversation",
+  "muUiNotify_dropped": "Not sent (the conversation changed or sending failed)",
+  "muUiNotify_prefilled": "Filled into the input box — send it yourself",
+  "muUiNotify_inactive": "This card is not in the conversation being viewed — nothing was sent",
+  "muUiQuizRetry": "Try again",
+  "muUiQuizCorrect": "Correct",
+  "muUiQuizWrong": "Not quite",
+  "muUiSelectPlaceholder": "Select…",
+  "muUiSubmitDefault": "Submit",
+  "muUiSubmitIncomplete": "Some required entries are still empty",
+  "muUiButtonActionMissing": "This button has no action — clicking does nothing"
 }

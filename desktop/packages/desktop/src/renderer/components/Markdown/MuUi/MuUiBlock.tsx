@@ -2,6 +2,8 @@
  * One file for both halves of a `mu-ui` fence: the parser that turns the fence's JSON into a bounded, typed
  * component tree, and the component that renders that tree as an inline structured card (stats, tables, callouts,
  * steps, charts, diagrams, images…) inside a chat reply. `CodeBlock` mounts it when a fence's language is `mu-ui`/`muui`.
+ * The interactive types (tabs, quiz, button…) parse here too, then render through `MuUiInteractive`, which also owns
+ * their behaviour and the message a button/submit click injects — see that file's header.
  *
  * The JSON is model output, so the parser is a trust boundary: every field is checked, coerced, or bounded there,
  * and the renderer below works on the validated types alone. Anything structurally wrong — JSON that does not
@@ -24,6 +26,15 @@ import { copyText } from '@/renderer/utils/ui/clipboard';
 import MermaidBlock from '../MermaidBlock';
 import { EChartView, type MuUiEChartNode, type MuUiEChartPreset, sanitizeEChartsOption } from './MuUiEChart';
 import {
+  InteractiveNodeView,
+  MuUiCardScope,
+  type MuUiAccordionSection,
+  type MuUiButtonTone,
+  type MuUiInteractiveNode,
+  type MuUiQuizOption,
+  type MuUiTabPane,
+} from './MuUiInteractive';
+import {
   ChartView,
   type MuUiChartDatum,
   type MuUiChartKind,
@@ -33,6 +44,13 @@ import {
 
 export type { MuUiChartDatum, MuUiChartKind, MuUiChartSeries } from './MuUiChart';
 export type { MuUiEChartNode, MuUiEChartPreset } from './MuUiEChart';
+export type {
+  MuUiInteractiveNode,
+  MuUiTabPane,
+  MuUiAccordionSection,
+  MuUiQuizOption,
+  MuUiButtonTone,
+} from './MuUiInteractive';
 
 export const MU_UI_MAX_NODES = 200;
 export const MU_UI_MAX_DEPTH = 8;
@@ -43,6 +61,17 @@ export const MU_UI_MAX_CHART_POINTS = 60;
 export const MU_UI_MAX_CHART_SERIES = 6;
 /** Mermaid source longer than this is cut and the spec flagged truncated. */
 export const MU_UI_MAX_MERMAID_CODE = 5000;
+/** A button/submit label or action longer than this is cut (kept readable in the injected message). */
+export const MU_UI_MAX_LABEL = 200;
+/** A field id longer than this is cut; ids key the submit aggregation, so they stay short. */
+export const MU_UI_MAX_ID = 100;
+/** Interactive list caps: past the cap the rest is dropped and the spec flagged truncated. */
+export const MU_UI_MAX_TABS = 10;
+export const MU_UI_MAX_SECTIONS = 20;
+export const MU_UI_MAX_QUIZ_OPTIONS = 8;
+export const MU_UI_MAX_SELECT_OPTIONS = 24;
+export const MU_UI_MAX_GROUPS = 12;
+export const MU_UI_MAX_FIELDS = 24;
 
 export type MuUiAccent = 'info' | 'success' | 'warning' | 'error';
 export type MuUiBadgeTone = 'accent' | 'success' | 'warn' | 'danger';
@@ -71,6 +100,7 @@ export type MuUiNode =
   | { type: 'timeline'; items: MuUiTimelineItem[] }
   | MuUiChartNode
   | MuUiEChartNode
+  | MuUiInteractiveNode
   | { type: 'mermaid'; code: string }
   | { type: 'image'; src: string; alt?: string };
 
@@ -122,6 +152,37 @@ const HEX_COLOR = /^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
 const asChartColor = (value: unknown): string | undefined =>
   typeof value === 'string' && HEX_COLOR.test(value.trim()) ? value.trim() : undefined;
 
+/** A button/submit label or action: display text, cut at the label budget and flagged truncated. */
+const asLabel = (value: unknown, budget: Budget): string => {
+  if (typeof value !== 'string') throw new InvalidSpec();
+  return clampText(value.trim(), budget, MU_UI_MAX_LABEL);
+};
+
+/** An optional label (submit's): same budget, undefined when absent or blank. */
+const asOptLabel = (value: unknown, budget: Budget): string | undefined =>
+  typeof value === 'string' && value.trim().length > 0 ? clampText(value.trim(), budget, MU_UI_MAX_LABEL) : undefined;
+
+/** A field id: plain short text; empty or missing means the node simply has no id (not collected by submit). */
+const asId = (value: unknown, budget: Budget): string | undefined =>
+  typeof value === 'string' && value.length > 0 ? clampText(value.trim(), budget, MU_UI_MAX_ID) : undefined;
+
+/** A list of ids (submit's groups/fields): capped, de-duplicated in order. */
+const asIdList = (raw: unknown, limit: number, budget: Budget): string[] | undefined => {
+  const entries = Array.isArray(raw) ? raw : [];
+  const ids: string[] = [];
+  for (const entry of entries) {
+    const id = asId(entry, budget);
+    if (id !== undefined && !ids.includes(id)) {
+      ids.push(id);
+      if (ids.length >= limit) {
+        budget.truncated = true;
+        break;
+      }
+    }
+  }
+  return ids.length > 0 ? ids : undefined;
+};
+
 /** A finite number the chart is willing to plot; anything else makes the whole spec invalid. */
 const asChartValue = (value: unknown): number => {
   if (typeof value !== 'number' || !Number.isFinite(value)) throw new InvalidSpec();
@@ -144,6 +205,7 @@ const asHttpUrl = (value: unknown, budget: Budget): string => {
 const ACCENTS: readonly MuUiAccent[] = ['info', 'success', 'warning', 'error'];
 const BADGE_TONES: readonly MuUiBadgeTone[] = ['accent', 'success', 'warn', 'danger'];
 const TEXT_SIZES: readonly MuUiTextSize[] = ['h1', 'h2', 'h3', 'body', 'muted', 'caption'];
+const BUTTON_TONES: readonly MuUiButtonTone[] = ['primary', 'danger', 'success', 'ghost'];
 
 /** A node that would live deeper than MU_UI_MAX_DEPTH, or past MU_UI_MAX_NODES, is dropped and the flag set. */
 const walkNode = (raw: unknown, depth: number, budget: Budget): MuUiNode | undefined => {
@@ -319,6 +381,112 @@ const walkNode = (raw: unknown, depth: number, budget: Budget): MuUiNode | undef
     }
     case 'image': {
       return { type, src: asHttpUrl(raw.src, budget), alt: asOptString(raw.alt, budget) };
+    }
+    case 'tabs': {
+      const rawTabs = Array.isArray(raw.tabs) ? raw.tabs : [];
+      const tabs: MuUiTabPane[] = [];
+      for (const pane of rawTabs) {
+        if (tabs.length >= MU_UI_MAX_TABS) {
+          budget.truncated = true;
+          break;
+        }
+        if (!isRecord(pane)) throw new InvalidSpec();
+        tabs.push({ label: asLabel(pane.label, budget), items: walkItems(pane.items, depth + 1, budget) });
+      }
+      if (tabs.length === 0) throw new InvalidSpec();
+      return { type, tabs };
+    }
+    case 'accordion': {
+      const rawSections = Array.isArray(raw.items) ? raw.items : [];
+      const sections: MuUiAccordionSection[] = [];
+      for (const section of rawSections) {
+        if (sections.length >= MU_UI_MAX_SECTIONS) {
+          budget.truncated = true;
+          break;
+        }
+        if (!isRecord(section)) throw new InvalidSpec();
+        sections.push({ title: asLabel(section.title, budget), items: walkItems(section.items, depth + 1, budget) });
+      }
+      if (sections.length === 0) throw new InvalidSpec();
+      return { type, items: sections };
+    }
+    case 'quiz': {
+      const rawOptions = Array.isArray(raw.options) ? raw.options : [];
+      const options: MuUiQuizOption[] = [];
+      for (const option of rawOptions) {
+        if (options.length >= MU_UI_MAX_QUIZ_OPTIONS) {
+          budget.truncated = true;
+          break;
+        }
+        if (!isRecord(option)) throw new InvalidSpec();
+        options.push({
+          label: asLabel(option.label, budget),
+          correct: option.correct === true,
+          feedback: asOptString(option.feedback, budget),
+        });
+      }
+      // A one-option quiz is a typo, not a question.
+      if (options.length < 2) throw new InvalidSpec();
+      return {
+        type,
+        question: asLabel(raw.question, budget),
+        options,
+        explanation: asOptString(raw.explanation, budget),
+        id: asId(raw.id, budget),
+      };
+    }
+    case 'button': {
+      return {
+        type,
+        label: asLabel(raw.label, budget),
+        tone: isOneOf(raw.tone, BUTTON_TONES) ?? 'primary',
+        action: asId(raw.action, budget),
+        small: raw.small === true,
+        full: raw.full === true,
+        icon: asOptString(raw.icon, budget),
+      };
+    }
+    case 'input':
+    case 'textarea': {
+      const rows =
+        type === 'textarea' && typeof raw.rows === 'number' && Number.isFinite(raw.rows)
+          ? Math.min(Math.max(Math.round(raw.rows), 1), 12)
+          : undefined;
+      return {
+        type,
+        label: asLabel(raw.label, budget),
+        placeholder: asOptString(raw.placeholder, budget),
+        id: asId(raw.id, budget),
+        rows,
+      };
+    }
+    case 'select': {
+      const rawOptions = Array.isArray(raw.options) ? raw.options : [];
+      const options: string[] = [];
+      for (const option of rawOptions) {
+        if (options.length >= MU_UI_MAX_SELECT_OPTIONS) {
+          budget.truncated = true;
+          break;
+        }
+        options.push(asLabel(option, budget));
+      }
+      if (options.length === 0) throw new InvalidSpec();
+      const selected =
+        typeof raw.selected === 'number' &&
+        Number.isInteger(raw.selected) &&
+        raw.selected >= 0 &&
+        raw.selected < options.length
+          ? raw.selected
+          : undefined;
+      return { type, label: asLabel(raw.label, budget), options, selected, id: asId(raw.id, budget) };
+    }
+    case 'submit': {
+      return {
+        type,
+        label: asOptLabel(raw.label, budget),
+        groups: asIdList(raw.groups, MU_UI_MAX_GROUPS, budget),
+        fields: asIdList(raw.fields, MU_UI_MAX_FIELDS, budget),
+      };
     }
     default:
       throw new InvalidSpec();
@@ -868,6 +1036,9 @@ function NodeView({ node }: { node: MuUiNode }) {
       return <MermaidBlock code={node.code} enablePanZoom={false} />;
     case 'image':
       return <ImageView node={node} />;
+    default:
+      // The interactive types (validated above): rendered by their own file, which borrows the generic stack.
+      return <InteractiveNodeView node={node} renderItems={(items) => <Stack items={items} gap={8} />} />;
   }
 }
 
@@ -899,54 +1070,56 @@ const MuUiBlock = React.memo(function MuUiBlock({ spec, source, truncated, style
   };
 
   return (
-    <div
-      // The spec is JSON and its content is data; keep it left-to-right under an RTL document.
-      dir='ltr'
-      style={{ width: '100%', minWidth: 0, ...style }}
-    >
+    <MuUiCardScope>
       <div
-        className='markdown-mu-ui-card'
-        style={{
-          position: 'relative',
-          width: '100%',
-          border: CELL_BORDER,
-          borderRadius: '10px',
-          padding: '12px 14px',
-          background: 'var(--bg-1)',
-          fontSize: '14px',
-          lineHeight: 1.6,
-          color: 'var(--text-primary)',
-          boxSizing: 'border-box',
-        }}
+        // The spec is JSON and its content is data; keep it left-to-right under an RTL document.
+        dir='ltr'
+        style={{ width: '100%', minWidth: 0, ...style }}
       >
-        {spec.title !== undefined && (
-          <div
-            style={{
-              fontSize: '15px',
-              fontWeight: 600,
-              paddingBottom: '8px',
-              borderBottom: '1px solid var(--border-light)',
-              marginBottom: '10px',
-              // Room for the copy button pinned to the card's top-right corner.
-              paddingRight: '34px',
-            }}
-          >
-            <MdText text={spec.title} />
-          </div>
-        )}
-        <Stack items={spec.items} gap={spec.gap ?? 8} />
-        {truncated && (
-          <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--text-secondary)', textAlign: 'center' }}>
-            {t('messages.muUiTruncated')}
-          </div>
-        )}
-        {/* The card's copy button, mirroring the code block's: the fence's raw JSON, feedback via toast. Its
+        <div
+          className='markdown-mu-ui-card'
+          style={{
+            position: 'relative',
+            width: '100%',
+            border: CELL_BORDER,
+            borderRadius: '10px',
+            padding: '12px 14px',
+            background: 'var(--bg-1)',
+            fontSize: '14px',
+            lineHeight: 1.6,
+            color: 'var(--text-primary)',
+            boxSizing: 'border-box',
+          }}
+        >
+          {spec.title !== undefined && (
+            <div
+              style={{
+                fontSize: '15px',
+                fontWeight: 600,
+                paddingBottom: '8px',
+                borderBottom: '1px solid var(--border-light)',
+                marginBottom: '10px',
+                // Room for the copy button pinned to the card's top-right corner.
+                paddingRight: '34px',
+              }}
+            >
+              <MdText text={spec.title} />
+            </div>
+          )}
+          <Stack items={spec.items} gap={spec.gap ?? 8} />
+          {truncated && (
+            <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--text-secondary)', textAlign: 'center' }}>
+              {t('messages.muUiTruncated')}
+            </div>
+          )}
+          {/* The card's copy button, mirroring the code block's: the fence's raw JSON, feedback via toast. Its
             hover behaviour lives in ShadowView's base style — the one sheet the shadow tree sees. */}
-        <span data-testid='mu-ui-copy' className='markdown-mu-ui-copy' title={t('common.copy')} onClick={handleCopy}>
-          <Copy theme='outline' size='14' style={{ display: 'block' }} fill='currentColor' />
-        </span>
+          <span data-testid='mu-ui-copy' className='markdown-mu-ui-copy' title={t('common.copy')} onClick={handleCopy}>
+            <Copy theme='outline' size='14' style={{ display: 'block' }} fill='currentColor' />
+          </span>
+        </div>
       </div>
-    </div>
+    </MuUiCardScope>
   );
 });
 

@@ -139,5 +139,18 @@
   },
   "muUiTruncated": "نمایش بخشی — این بلوک از محدودیت اندازه فراتر است",
   "muUiImageLoadFailed": "این تصویر بارگذاری نشد",
-  "muUiEChartLoading": "در حال بارگذاری نمودار…"
+  "muUiEChartLoading": "در حال بارگذاری نمودار…",
+  "muUiNotify_triggered": "فعال شد",
+  "muUiNotify_waiting": "فعال شد — به محض آزاد شدن گفتگو ارسال می‌شود",
+  "muUiNotify_sent": "به گفتگو ارسال شد",
+  "muUiNotify_dropped": "ارسال نشد (گفتگو تغییر کرد یا ارسال ناموفق بود)",
+  "muUiNotify_prefilled": "در کادر ورودی قرار گرفت — خودتان ارسال کنید",
+  "muUiNotify_inactive": "این کارت متعلق به گفتگوی فعال نیست — چیزی ارسال نشد",
+  "muUiQuizRetry": "دوباره تلاش کنید",
+  "muUiQuizCorrect": "درست",
+  "muUiQuizWrong": "نادرست",
+  "muUiSelectPlaceholder": "انتخاب کنید…",
+  "muUiSubmitDefault": "ارسال",
+  "muUiSubmitIncomplete": "برخی موارد لازم هنوز خالی هستند",
+  "muUiButtonActionMissing": "این دکمه action ندارد — کلیک بی‌اثر است"
 }

@@ -139,5 +139,18 @@
   },
   "muUiTruncated": "內容超出組件數上限，已截斷顯示",
   "muUiImageLoadFailed": "圖片載入失敗",
-  "muUiEChartLoading": "正在載入圖表…"
+  "muUiEChartLoading": "正在載入圖表…",
+  "muUiNotify_triggered": "已觸發",
+  "muUiNotify_waiting": "已觸發，會話空閒後自動傳送",
+  "muUiNotify_sent": "已傳送到會話",
+  "muUiNotify_dropped": "未傳送（會話已切換或傳送失敗）",
+  "muUiNotify_prefilled": "已填入輸入框，請手動傳送",
+  "muUiNotify_inactive": "此卡片不屬於目前會話，未傳送",
+  "muUiQuizRetry": "重試",
+  "muUiQuizCorrect": "回答正確",
+  "muUiQuizWrong": "回答錯誤",
+  "muUiSelectPlaceholder": "請選擇…",
+  "muUiSubmitDefault": "提交",
+  "muUiSubmitIncomplete": "還有未完成的必填項",
+  "muUiButtonActionMissing": "按鈕未指定 action，點擊無效"
 }

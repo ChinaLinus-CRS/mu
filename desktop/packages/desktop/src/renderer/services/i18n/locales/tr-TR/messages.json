@@ -139,5 +139,18 @@
   },
   "muUiTruncated": "Boyut sınırı aşıldığından yalnızca bir kısmı gösteriliyor",
   "muUiImageLoadFailed": "Bu görsel yüklenemedi",
-  "muUiEChartLoading": "Grafik yükleniyor…"
+  "muUiEChartLoading": "Grafik yükleniyor…",
+  "muUiNotify_triggered": "Tetiklendi",
+  "muUiNotify_waiting": "Tetiklendi — sohbet boşta olduğunda gönderilecek",
+  "muUiNotify_sent": "Sohbete gönderildi",
+  "muUiNotify_dropped": "Gönderilmedi (sohbet değişti veya gönderme başarısız oldu)",
+  "muUiNotify_prefilled": "Giriş kutusuna dolduruldu — kendiniz gönderin",
+  "muUiNotify_inactive": "Bu kart görüntülenen sohbete ait değil — hiçbir şey gönderilmedi",
+  "muUiQuizRetry": "Tekrar dene",
+  "muUiQuizCorrect": "Doğru",
+  "muUiQuizWrong": "Yanlış",
+  "muUiSelectPlaceholder": "Seçin…",
+  "muUiSubmitDefault": "Gönder",
+  "muUiSubmitIncomplete": "Bazı zorunlu alanlar hâlâ boş",
+  "muUiButtonActionMissing": "Bu düğmenin eylemi yok — tıklamak hiçbir şey yapmaz"
 }

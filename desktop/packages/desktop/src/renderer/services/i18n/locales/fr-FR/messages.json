@@ -139,5 +139,18 @@
   },
   "muUiTruncated": "Affiché partiellement — ce bloc d’UI dépasse la limite de taille",
   "muUiImageLoadFailed": "Impossible de charger cette image",
-  "muUiEChartLoading": "Chargement du graphique…"
+  "muUiEChartLoading": "Chargement du graphique…",
+  "muUiNotify_triggered": "Déclenché",
+  "muUiNotify_waiting": "Déclenché — envoi dès que la conversation est libre",
+  "muUiNotify_sent": "Envoyé à la conversation",
+  "muUiNotify_dropped": "Non envoyé (la conversation a changé ou l'envoi a échoué)",
+  "muUiNotify_prefilled": "Placé dans la zone de saisie — envoyez-le vous-même",
+  "muUiNotify_inactive": "Cette carte n'appartient pas à la conversation affichée — rien n'a été envoyé",
+  "muUiQuizRetry": "Réessayer",
+  "muUiQuizCorrect": "Correct",
+  "muUiQuizWrong": "Pas tout à fait",
+  "muUiSelectPlaceholder": "Sélectionner…",
+  "muUiSubmitDefault": "Envoyer",
+  "muUiSubmitIncomplete": "Des champs obligatoires sont encore vides",
+  "muUiButtonActionMissing": "Ce bouton n'a pas d'action — cliquer ne fait rien"
 }

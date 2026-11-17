@@ -139,5 +139,18 @@
   },
   "muUiTruncated": "サイズ上限を超えたため、一部のみ表示しています",
   "muUiImageLoadFailed": "画像を読み込めませんでした",
-  "muUiEChartLoading": "チャートを読み込み中…"
+  "muUiEChartLoading": "チャートを読み込み中…",
+  "muUiNotify_triggered": "実行しました",
+  "muUiNotify_waiting": "実行しました — 会話が空き次第送信します",
+  "muUiNotify_sent": "会話に送信しました",
+  "muUiNotify_dropped": "送信されませんでした（会話が切り替わったか送信に失敗）",
+  "muUiNotify_prefilled": "入力欄に挿入しました — 手動で送信してください",
+  "muUiNotify_inactive": "このカードは表示中の会話のものではないため、送信しませんでした",
+  "muUiQuizRetry": "再挑戦",
+  "muUiQuizCorrect": "正解",
+  "muUiQuizWrong": "不正解",
+  "muUiSelectPlaceholder": "選択してください…",
+  "muUiSubmitDefault": "送信",
+  "muUiSubmitIncomplete": "未入力の必須項目があります",
+  "muUiButtonActionMissing": "このボタンには action がないため、クリックしても何も起きません"
 }
