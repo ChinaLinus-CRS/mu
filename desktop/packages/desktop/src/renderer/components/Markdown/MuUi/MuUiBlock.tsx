@@ -20,7 +20,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { copyText } from '@/renderer/utils/ui/clipboard';
 
-import MermaidBlock from './MermaidBlock';
+import MermaidBlock from '../MermaidBlock';
 import { EChartView, type MuUiEChartNode, type MuUiEChartPreset, sanitizeEChartsOption } from './MuUiEChart';
 import {
   ChartView,

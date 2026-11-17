@@ -59,8 +59,8 @@ vi.mock('@/renderer/pages/conversation/Preview', () => ({
 
 import { Message } from '@arco-design/web-react';
 import CodeBlock from '@/renderer/components/Markdown/CodeBlock';
-import { MU_UI_MAX_NODES, MU_UI_MAX_TEXT, parseMuUiSpec } from '@/renderer/components/Markdown/MuUiBlock';
-import { MU_UI_MAX_ECHART_OPTION, sanitizeEChartsOption } from '@/renderer/components/Markdown/MuUiEChart';
+import { MU_UI_MAX_NODES, MU_UI_MAX_TEXT, parseMuUiSpec } from '@/renderer/components/Markdown/MuUi/MuUiBlock';
+import { MU_UI_MAX_ECHART_OPTION, sanitizeEChartsOption } from '@/renderer/components/Markdown/MuUi/MuUiEChart';
 import { copyText } from '@/renderer/utils/ui/clipboard';
 
 const fence = (spec: unknown) => `${JSON.stringify(spec, null, 2)}\n`;
