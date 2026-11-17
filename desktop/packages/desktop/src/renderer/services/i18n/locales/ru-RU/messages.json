@@ -143,5 +143,18 @@
   },
   "muUiTruncated": "Показано частично — блок превышает лимит размера",
   "muUiImageLoadFailed": "Не удалось загрузить это изображение",
-  "muUiEChartLoading": "Загрузка графика…"
+  "muUiEChartLoading": "Загрузка графика…",
+  "muUiNotify_triggered": "Запущено",
+  "muUiNotify_waiting": "Запущено — будет отправлено, когда разговор освободится",
+  "muUiNotify_sent": "Отправлено в разговор",
+  "muUiNotify_dropped": "Не отправлено (разговор сменился или отправка не удалась)",
+  "muUiNotify_prefilled": "Вставлено в поле ввода — отправьте сами",
+  "muUiNotify_inactive": "Эта карточка не из открытого разговора — ничего не отправлено",
+  "muUiQuizRetry": "Попробовать снова",
+  "muUiQuizCorrect": "Верно",
+  "muUiQuizWrong": "Неверно",
+  "muUiSelectPlaceholder": "Выберите…",
+  "muUiSubmitDefault": "Отправить",
+  "muUiSubmitIncomplete": "Некоторые обязательные поля ещё пусты",
+  "muUiButtonActionMissing": "У этой кнопки нет действия — щелчок ничего не делает"
 }

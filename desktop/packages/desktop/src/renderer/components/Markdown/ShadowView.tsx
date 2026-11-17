@@ -177,6 +177,26 @@ const initStyleCss = (
       opacity: 1;
     }
   }
+  /* The mu-ui card's interactive controls (MuUi/MuUiInteractive.tsx): their look is inline styles, which win over
+     this sheet, so only effects inline styles cannot express live here — hover/active as a filter (works whatever
+     the inline background) and a focus ring for the fields. */
+  .markdown-shadow-body .markdown-mu-ui-btn,
+  .markdown-shadow-body .markdown-mu-ui-opt {
+    cursor: pointer;
+    user-select: none;
+  }
+  .markdown-shadow-body .markdown-mu-ui-btn:hover:not(:disabled),
+  .markdown-shadow-body .markdown-mu-ui-opt:hover:not(:disabled) {
+    filter: brightness(1.12);
+  }
+  .markdown-shadow-body .markdown-mu-ui-btn:active:not(:disabled),
+  .markdown-shadow-body .markdown-mu-ui-opt:active:not(:disabled) {
+    filter: brightness(0.92);
+  }
+  .markdown-shadow-body .markdown-mu-ui-input:focus {
+    outline: 2px solid color-mix(in srgb, var(--primary) 55%, transparent);
+    outline-offset: -1px;
+  }
   /* A file a reply names (components/media/FileRefs): the inline code stays, drawn as a link to the file. */
   .markdown-shadow-body .markdown-file-ref-open,
   .markdown-shadow-body .markdown-file-ref-reveal {

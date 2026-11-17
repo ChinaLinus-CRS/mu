@@ -139,5 +139,18 @@
   },
   "muUiTruncated": "Nur teilweise angezeigt — dieser UI-Block überschreitet die Größenbeschränkung",
   "muUiImageLoadFailed": "Dieses Bild konnte nicht geladen werden",
-  "muUiEChartLoading": "Diagramm wird geladen…"
+  "muUiEChartLoading": "Diagramm wird geladen…",
+  "muUiNotify_triggered": "Ausgelöst",
+  "muUiNotify_waiting": "Ausgelöst — wird gesendet, sobald die Konversation frei ist",
+  "muUiNotify_sent": "An die Konversation gesendet",
+  "muUiNotify_dropped": "Nicht gesendet (die Konversation wechselte oder das Senden schlug fehl)",
+  "muUiNotify_prefilled": "Ins Eingabefeld eingetragen — bitte selbst senden",
+  "muUiNotify_inactive": "Diese Karte gehört nicht zur angezeigten Konversation — nichts wurde gesendet",
+  "muUiQuizRetry": "Erneut versuchen",
+  "muUiQuizCorrect": "Richtig",
+  "muUiQuizWrong": "Leider falsch",
+  "muUiSelectPlaceholder": "Auswählen…",
+  "muUiSubmitDefault": "Absenden",
+  "muUiSubmitIncomplete": "Einige erforderliche Einträge sind noch leer",
+  "muUiButtonActionMissing": "Diese Schaltfläche hat keine Aktion — ein Klick tut nichts"
 }

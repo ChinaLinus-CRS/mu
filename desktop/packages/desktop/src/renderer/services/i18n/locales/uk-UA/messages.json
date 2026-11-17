@@ -145,5 +145,18 @@
   },
   "muUiTruncated": "Показано частково — блок перевищує ліміт розміру",
   "muUiImageLoadFailed": "Не вдалося завантажити це зображення",
-  "muUiEChartLoading": "Завантаження діаграми…"
+  "muUiEChartLoading": "Завантаження діаграми…",
+  "muUiNotify_triggered": "Запущено",
+  "muUiNotify_waiting": "Запущено — надсилається, щойно розмова звільниться",
+  "muUiNotify_sent": "Надіслано до розмови",
+  "muUiNotify_dropped": "Не надіслано (розмову змінено або надсилання не вдалося)",
+  "muUiNotify_prefilled": "Вставлено у поле введення — надішліть самі",
+  "muUiNotify_inactive": "Ця картка не з відкритої розмови — нічого не надіслано",
+  "muUiQuizRetry": "Спробувати ще раз",
+  "muUiQuizCorrect": "Правильно",
+  "muUiQuizWrong": "Неправильно",
+  "muUiSelectPlaceholder": "Оберіть…",
+  "muUiSubmitDefault": "Надіслати",
+  "muUiSubmitIncomplete": "Деякі обов'язкові поля ще порожні",
+  "muUiButtonActionMissing": "У цієї кнопки немає дії — натискання нічого не робить"
 }

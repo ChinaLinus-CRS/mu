@@ -139,5 +139,18 @@
   },
   "muUiTruncated": "Exibido parcialmente — este bloco de UI ultrapassou o limite de tamanho",
   "muUiImageLoadFailed": "Não foi possível carregar esta imagem",
-  "muUiEChartLoading": "Carregando gráfico…"
+  "muUiEChartLoading": "Carregando gráfico…",
+  "muUiNotify_triggered": "Acionado",
+  "muUiNotify_waiting": "Acionado — será enviado quando a conversa estiver livre",
+  "muUiNotify_sent": "Enviado para a conversa",
+  "muUiNotify_dropped": "Não enviado (a conversa mudou ou o envio falhou)",
+  "muUiNotify_prefilled": "Preenchido na caixa de entrada — envie você mesmo",
+  "muUiNotify_inactive": "Este cartão não pertence à conversa em exibição — nada foi enviado",
+  "muUiQuizRetry": "Tentar novamente",
+  "muUiQuizCorrect": "Correto",
+  "muUiQuizWrong": "Incorreto",
+  "muUiSelectPlaceholder": "Selecionar…",
+  "muUiSubmitDefault": "Enviar",
+  "muUiSubmitIncomplete": "Ainda há campos obrigatórios vazios",
+  "muUiButtonActionMissing": "Este botão não tem ação — clicar não faz nada"
 }
