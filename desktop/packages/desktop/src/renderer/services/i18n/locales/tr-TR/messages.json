@@ -136,5 +136,8 @@
   "deliverables": {
     "title": "Sizin için dosyalar ({{count}})",
     "open": "{{name}} dosyasını aç"
-  }
+  },
+  "muUiTruncated": "Boyut sınırı aşıldığından yalnızca bir kısmı gösteriliyor",
+  "muUiImageLoadFailed": "Bu görsel yüklenemedi",
+  "muUiEChartLoading": "Grafik yükleniyor…"
 }

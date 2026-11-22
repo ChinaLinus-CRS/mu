@@ -142,5 +142,8 @@
   "deliverables": {
     "title": "Файли для вас ({{count}})",
     "open": "Відкрити {{name}}"
-  }
+  },
+  "muUiTruncated": "Показано частково — блок перевищує ліміт розміру",
+  "muUiImageLoadFailed": "Не вдалося завантажити це зображення",
+  "muUiEChartLoading": "Завантаження діаграми…"
 }

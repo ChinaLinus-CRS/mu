@@ -136,5 +136,8 @@
   "deliverables": {
     "title": "Fichiers pour vous ({{count}})",
     "open": "Ouvrir {{name}}"
-  }
+  },
+  "muUiTruncated": "Affiché partiellement — ce bloc d’UI dépasse la limite de taille",
+  "muUiImageLoadFailed": "Impossible de charger cette image",
+  "muUiEChartLoading": "Chargement du graphique…"
 }

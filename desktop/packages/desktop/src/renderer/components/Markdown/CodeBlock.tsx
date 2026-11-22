@@ -15,6 +15,7 @@ import { copyText } from '@/renderer/utils/ui/clipboard';
 import { codeLanguage } from './codeLanguage';
 import MermaidBlock from './MermaidBlock';
 import WavedromBlock from './WavedromBlock';
+import MuUiBlock, { parseMuUiSpec } from './MuUiBlock';
 import { formatCode, getDiffLineStyle } from './markdownUtils';
 import { MarkdownFileSlotsContext } from './markdownComponents';
 
@@ -338,6 +339,20 @@ function CodeBlock(props: CodeBlockProps) {
     return <WavedromBlock code={formatCode(children)} style={props.codeStyle} enablePanZoom={props.diagramPanZoom} />;
   }
 
+  // A structured-UI fence: only a spec that fully parses is drawn; anything else (still streaming, malformed,
+  // an unknown component type) falls through and stays a plain code block showing the source.
+  if (language === 'mu-ui' || language === 'muui') {
+    const source = String(children);
+    const parsed = parseMuUiSpec(source);
+    if (parsed.ok) {
+      return (
+        <MuUiFenceBoundary key={source} fallback={<FencedCodeBlock {...props} language={language} />}>
+          <MuUiBlock spec={parsed.spec} source={source} truncated={parsed.truncated} style={props.codeStyle} />
+        </MuUiFenceBoundary>
+      );
+    }
+  }
+
   // Inline code (single line)
   if (!String(children).includes('\n')) {
     return (
@@ -348,6 +363,31 @@ function CodeBlock(props: CodeBlockProps) {
   }
 
   return <FencedCodeBlock {...props} language={language} />;
+}
+
+/**
+ * Catches a structured-UI fence that fails while rendering — today only the `echart` type can: a chart library that
+ * fails to load or a draw that throws re-raises during render — and swaps the whole card back to the plain code
+ * block, so a broken chart never leaves a blank area in the reply. Keyed by the fence source: a new spec starts
+ * fresh instead of staying on the fallback.
+ */
+class MuUiFenceBoundary extends React.Component<
+  { fallback: React.ReactNode; children: React.ReactNode },
+  { failed: boolean }
+> {
+  state: { failed: boolean } = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    console.warn('mu-ui fence fell back to its code block after a render error', error);
+  }
+
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
 }
 
 export default CodeBlock;
