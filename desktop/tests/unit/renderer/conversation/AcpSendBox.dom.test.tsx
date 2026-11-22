@@ -347,6 +347,7 @@ vi.mock('@arco-design/web-react', () => ({
   },
   Tag: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
   Popover: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
+  Tooltip: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
   Button: ({
     children,
     onClick,

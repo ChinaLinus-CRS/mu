@@ -11,7 +11,9 @@ import { useTranslation } from 'react-i18next';
 import type { TMessage } from '@/common/chat/chatLib';
 import { ipcBridge } from '@/common';
 import { useConversationContextSafe } from '@/renderer/hooks/context/ConversationContext';
-import LocalImageView from '@/renderer/components/media/LocalImageView';
+import LocalImageView from '@/renderer/components/media/local/LocalImageView';
+import LocalVideoView from '@/renderer/components/media/local/LocalVideoView';
+import { isVideoPath } from '@/common/chat/fileRefs/pathLike';
 import { useOptionalLocalFilePreview } from '@/renderer/pages/conversation/Preview/hooks/useLocalFilePreview';
 import { useMessageListRun } from '../hooks';
 import { emitter } from '@/renderer/utils/emitter';
@@ -106,17 +108,17 @@ const MessageDeliverables: React.FC<{ delivered: Deliverables }> = ({ delivered 
       ) : null}
       <div className='flex flex-col gap-2px'>
         {delivered.files.map((file) => (
-          <Button
-            key={file.path}
-            type='text'
-            className='!h-auto !px-8px !py-5px !rd-6px hover:!bg-fill-2 !text-left !justify-start transition-colors'
-            disabled={!open}
-            title={file.path}
-            aria-label={t('messages.deliverables.open', { name: file.name })}
-            data-testid='message-deliverables-file'
-            data-path={file.path}
-            onClick={() => void open?.(file.path)}
-          >
+          <div key={file.path} className='flex flex-col gap-2px'>
+            <Button
+              type='text'
+              className='!h-auto !px-8px !py-5px !rd-6px hover:!bg-fill-2 !text-left !justify-start transition-colors'
+              disabled={!open}
+              title={file.path}
+              aria-label={t('messages.deliverables.open', { name: file.name })}
+              data-testid='message-deliverables-file'
+              data-path={file.path}
+              onClick={() => void open?.(file.path)}
+            >
             <span className='flex w-full items-center gap-8px min-w-0'>
               {isImagePath(file.path) ? (
                 <span
@@ -132,7 +134,13 @@ const MessageDeliverables: React.FC<{ delivered: Deliverables }> = ({ delivered 
                 <span className='text-11.5px font-mono text-t-tertiary flex-none'>{fileSize(file.bytes)}</span>
               </span>
             </span>
-          </Button>
+            </Button>
+            {isVideoPath(file.path) ? (
+              <div className='px-8px pb-6px' data-testid='message-deliverables-video'>
+                <LocalVideoView src={file.path} title={file.name} />
+              </div>
+            ) : null}
+          </div>
         ))}
       </div>
       {/* HTML deliverables join the message bar style: their actions sit at the
