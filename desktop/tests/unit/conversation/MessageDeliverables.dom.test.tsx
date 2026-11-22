@@ -9,7 +9,7 @@
  * only named; any other file keeps its row as it was.
  */
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { TMessage } from '@/common/chat/chatLib';
 import MessageDeliverables, { deliverables } from '@/renderer/pages/conversation/Messages/acp/MessageDeliverables';
@@ -23,7 +23,9 @@ vi.mock('react-i18next', () => ({
 const { invoke } = vi.hoisted(() => ({
   invoke: vi.fn(async ({ path }: { path: string }) => `data:image/png;base64,${path.replaceAll('/', '_')}`),
 }));
-vi.mock('@/common', () => ({ ipcBridge: { fs: { getImageBase64: { invoke } } } }));
+vi.mock('@/common', () => ({
+  ipcBridge: { fs: { getImageBase64: { invoke }, copyFileToClipboard: { invoke: vi.fn(async () => true) } } },
+}));
 
 vi.mock('@/renderer/pages/conversation/Preview/hooks/useLocalFilePreview', () => ({
   useOptionalLocalFilePreview: () => vi.fn(),
@@ -50,6 +52,26 @@ describe('deliverables', () => {
     const read = deliverables(presentCall([...many, { path: 7 }, 'x']));
     expect(read?.files).toHaveLength(8);
     expect(read?.files[0]).toEqual({ path: 'E:/out/0.png', name: '0.png', bytes: 0 });
+  });
+
+  it('reads the files the present tool carries in its result details (the payload the harness sends)', () => {
+    const message = {
+      type: 'acp_tool_call',
+      content: {
+        update: {
+          title: 'present',
+          status: 'completed',
+          raw_output: {
+            content: [{ type: 'text', text: 'Presented to the user (1 file)' }],
+            details: { files: [{ path: 'E:/out/deck.mp4', name: 'deck.mp4', bytes: 2048 }] },
+            status: 'completed',
+          },
+        },
+      },
+    } as unknown as TMessage;
+    expect(deliverables(message)).toEqual({
+      files: [{ path: 'E:/out/deck.mp4', name: 'deck.mp4', bytes: 2048 }],
+    });
   });
 
   it('stays away from any other row', () => {
@@ -81,5 +103,29 @@ describe('MessageDeliverables', () => {
     expect(thumbs).toHaveLength(1);
     await waitFor(() => expect(screen.getByAltText('card.png')).toBeTruthy());
     expect(invoke).toHaveBeenCalledWith({ path: 'E:/out/card.png', workspace: undefined });
+  });
+});
+
+describe('MessageDeliverables video rows', () => {
+  // A video `present` handed over plays in its row — streamed, not carried whole into memory.
+  it('shows a video under its row, streaming it from the backend route', async () => {
+    invoke.mockClear();
+    render(<MessageDeliverables delivered={{ files: [{ path: 'E:/out/clip.mp4', name: 'clip.mp4', bytes: 4096 }] }} />);
+    const block = await screen.findByTestId('message-deliverables-video');
+    const video = block.querySelector('video');
+    expect(video).toBeTruthy();
+    expect(video?.getAttribute('preload')).toBe('metadata');
+    expect(video?.getAttribute('title')).toBe('clip.mp4');
+    expect(video?.getAttribute('src')).toContain('/api/fs/stream');
+    expect(invoke).not.toHaveBeenCalled(); // no base64 read for a video
+  });
+
+  it('a video that fails to load shows the error state, never a spinner', async () => {
+    render(<MessageDeliverables delivered={{ files: [{ path: 'E:/out/gone.mp4', name: 'gone.mp4', bytes: 4096 }] }} />);
+    const block = await screen.findByTestId('message-deliverables-video');
+    fireEvent(block.querySelector('video') as Element, new Event('error'));
+    const failed = await screen.findByTestId('local-video-error');
+    expect(failed.textContent).toContain('gone.mp4');
+    expect(block.querySelector('video')).toBeNull();
   });
 });

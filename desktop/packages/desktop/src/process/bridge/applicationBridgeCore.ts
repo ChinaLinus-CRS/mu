@@ -13,6 +13,7 @@ import os from 'os';
 import path from 'path';
 import { ipcBridge } from '@/common';
 import { createSkillFileService } from '@process/services/skills';
+import { copyFileToClipboard } from '@process/utils/copyFileToClipboard';
 import { getSystemDir, ProcessEnv } from '@process/utils/initStorage';
 import { copyDirectoryRecursively, getConfigPath, getDataPath, resolveCliSafePath } from '@process/utils';
 import { DIRS_KEY } from '@/common/platform/legacyNames';
@@ -48,5 +49,17 @@ export function initApplicationBridgeCore(): void {
       downloads: path.join(home, 'Downloads'),
     };
     return Promise.resolve(map[name] ?? home);
+  });
+
+  // A file on the OS clipboard the user can paste into Explorer/Finder — no web clipboard API
+  // writes files, so the main process asks the OS shell utility. One path per call: the UI copies
+  // the file a video card names. utils/copyFileToClipboard re-validates the path (a regular video
+  // file the card could show) and keeps it out of any script text: the window gets error codes
+  // only, never a path. A 10s bound on the child covers a wedged shell utility; a WebUI renderer
+  // with no provider connected is failed fast by the caller's own invoke timeout, which falls
+  // back to copying the path.
+  ipcBridge.fs.copyFileToClipboard.provider(async ({ path: filePath }) => {
+    await copyFileToClipboard(filePath);
+    return true;
   });
 }

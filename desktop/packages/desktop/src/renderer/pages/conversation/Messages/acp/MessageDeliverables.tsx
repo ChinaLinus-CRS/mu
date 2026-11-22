@@ -10,7 +10,9 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TMessage } from '@/common/chat/chatLib';
 import { useConversationContextSafe } from '@/renderer/hooks/context/ConversationContext';
-import LocalImageView from '@/renderer/components/media/LocalImageView';
+import LocalImageView from '@/renderer/components/media/local/LocalImageView';
+import LocalVideoView from '@/renderer/components/media/local/LocalVideoView';
+import { isVideoPath } from '@/common/chat/fileRefs/pathLike';
 import { useOptionalLocalFilePreview } from '@/renderer/pages/conversation/Preview/hooks/useLocalFilePreview';
 import { useMessageListRun } from '../hooks';
 
@@ -28,9 +30,12 @@ export function deliverables(message: TMessage): Deliverables | undefined {
   if (message.type !== 'acp_tool_call') return undefined;
   const update = record(message.content?.update);
   if (update.title !== 'present' || update.status !== 'completed') return undefined;
-  // The relay snake-cases the keys it passes on.
+  // The relay snake-cases the keys it passes on. The files live in the result's details
+  // (kyrn-judge's PresentDetails); the older flat shape is still read, so a payload either
+  // era wrote shows its card.
   const output = record(update.raw_output ?? update.rawOutput);
-  const files = (Array.isArray(output.files) ? output.files : [])
+  const carried = Array.isArray(output.files) ? output.files : record(output.details).files;
+  const files = (Array.isArray(carried) ? carried : [])
     .slice(0, MAX_FILES)
     .map(record)
     .flatMap((file): DeliveredFile[] =>
@@ -87,33 +92,39 @@ const MessageDeliverables: React.FC<{ delivered: Deliverables }> = ({ delivered 
       ) : null}
       <div className='flex flex-col gap-2px'>
         {delivered.files.map((file) => (
-          <Button
-            key={file.path}
-            type='text'
-            className='!h-auto !px-8px !py-5px !rd-6px hover:!bg-fill-2 !text-left !justify-start transition-colors'
-            disabled={!open}
-            title={file.path}
-            aria-label={t('messages.deliverables.open', { name: file.name })}
-            data-testid='message-deliverables-file'
-            data-path={file.path}
-            onClick={() => void open?.(file.path)}
-          >
-            <span className='flex w-full items-center gap-8px min-w-0'>
-              {isImagePath(file.path) ? (
-                <span
-                  className='flex-none size-40px rd-6px overflow-hidden flex items-center justify-center bg-fill-2'
-                  data-testid='message-deliverables-thumb'
-                >
-                  <LocalImageView src={file.path} alt={file.name} className='size-full object-cover' />
+          <div key={file.path} className='flex flex-col gap-2px'>
+            <Button
+              type='text'
+              className='!h-auto !px-8px !py-5px !rd-6px hover:!bg-fill-2 !text-left !justify-start transition-colors'
+              disabled={!open}
+              title={file.path}
+              aria-label={t('messages.deliverables.open', { name: file.name })}
+              data-testid='message-deliverables-file'
+              data-path={file.path}
+              onClick={() => void open?.(file.path)}
+            >
+              <span className='flex w-full items-center gap-8px min-w-0'>
+                {isImagePath(file.path) ? (
+                  <span
+                    className='flex-none size-40px rd-6px overflow-hidden flex items-center justify-center bg-fill-2'
+                    data-testid='message-deliverables-thumb'
+                  >
+                    <LocalImageView src={file.path} alt={file.name} className='size-full object-cover' />
+                  </span>
+                ) : null}
+                <span className='flex flex-1 items-baseline gap-8px min-w-0'>
+                  <span className='text-13px font-500 text-t-primary truncate'>{file.name}</span>
+                  <span className='text-12px text-t-tertiary truncate flex-1 min-w-0'>{folderOf(file.path)}</span>
+                  <span className='text-11.5px font-mono text-t-tertiary flex-none'>{fileSize(file.bytes)}</span>
                 </span>
-              ) : null}
-              <span className='flex flex-1 items-baseline gap-8px min-w-0'>
-                <span className='text-13px font-500 text-t-primary truncate'>{file.name}</span>
-                <span className='text-12px text-t-tertiary truncate flex-1 min-w-0'>{folderOf(file.path)}</span>
-                <span className='text-11.5px font-mono text-t-tertiary flex-none'>{fileSize(file.bytes)}</span>
               </span>
-            </span>
-          </Button>
+            </Button>
+            {isVideoPath(file.path) ? (
+              <div className='px-8px pb-6px' data-testid='message-deliverables-video'>
+                <LocalVideoView src={file.path} title={file.name} />
+              </div>
+            ) : null}
+          </div>
         ))}
       </div>
     </div>

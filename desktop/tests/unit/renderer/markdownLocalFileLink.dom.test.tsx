@@ -22,9 +22,16 @@ vi.mock('@/renderer/components/Markdown/CodeBlock', () => ({
   default: ({ children }: { children?: React.ReactNode }) => <code>{children}</code>,
 }));
 
-vi.mock('@/renderer/components/media/LocalImageView', () => ({
+vi.mock('@/renderer/components/media/local/LocalImageView', () => ({
   __esModule: true,
   default: ({ src, alt }: { src: string; alt: string }) => <img src={src} alt={alt} />,
+}));
+
+vi.mock('@/renderer/components/media/local/LocalVideoView', () => ({
+  __esModule: true,
+  default: ({ src, title }: { src: string; title: string }) => (
+    <span data-testid='markdown-video' data-src={src} data-title={title} />
+  ),
 }));
 
 vi.mock('@/renderer/utils/chat/latexDelimiters', () => ({
@@ -70,6 +77,14 @@ describe('MarkdownView local file links', () => {
   beforeEach(() => {
     copyTextMock.mockClear();
     vi.mocked(openExternalUrl).mockReset().mockResolvedValue(undefined);
+  });
+
+  it('renders an image-syntax video as the video view, not a broken img', () => {
+    render(<MarkdownView>{'![clip](./demo.mp4)'}</MarkdownView>);
+    const video = screen.getByTestId('markdown-video');
+    expect(video.getAttribute('data-src')).toBe('./demo.mp4');
+    expect(video.getAttribute('data-title')).toBe('clip');
+    expect(document.querySelector('img')).toBeNull();
   });
 
   it('renders local file links as app controls instead of browser anchors', () => {
